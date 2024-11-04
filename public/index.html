@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal Chat App</title>
+    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="messages"></div>
+    <div id="input-container">
+        <input id="input" placeholder="Type your message..." autofocus />
+    </div>
+
+    <script>
+        // Initialize Gun
+        const gun = Gun(location.origin + '/gun');
+        const chat = gun.get('chat');
+
+        // Set Username and Session ID
+        let username = localStorage.getItem('username') || prompt("Enter your username:");
+        localStorage.setItem('username', username);
+        const sessionId = Math.random().toString(36).substr(2, 9);
+
+        // Helper function to generate status indicators
+        function getStatusIndicator() {
+            return Math.random() < 0.5 ? '🟢' : '🔴';
+        }
+
+        // Message Display
+        const messagesDiv = document.getElementById('messages');
+        const inputField = document.getElementById('input');
+
+        // Event listener for sending messages
+        inputField.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter' && inputField.value.trim() !== '') {
+                const message = inputField.value;
+                chat.set({
+                    username,
+                    sessionId,
+                    message,
+                    status: getStatusIndicator(),
+                    timestamp: Date.now()
+                });
+                inputField.value = '';
+            }
+        });
+
+        // Listen for new messages
+        chat.map().on((data, id) => {
+            if (data && data.message) {
+                const messageLine = document.createElement('p');
+                messageLine.textContent = `@${data.username} (${data.status}): ${data.message}`;
+                messagesDiv.appendChild(messageLine);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }
+        });
+    </script>
+</body>
+</html>
