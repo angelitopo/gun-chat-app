@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -14,9 +14,10 @@
     </div>
 
     <script>
-        // Initialize Gun and set up a 'tweets' node
+        // Initialize Gun and set up 'tweets' and 'network-logs' nodes
         const gun = Gun(location.origin + '/gun');
         const tweets = gun.get('tweets');
+        const logs = gun.get('network-logs'); // Node for logging network activity
 
         // Set Username and Session ID
         let username = localStorage.getItem('username') || prompt("Enter your username:");
@@ -26,6 +27,18 @@
         // Helper function to generate online status indicators
         function getStatusIndicator() {
             return Math.random() < 0.5 ? '🟢' : '🔴';
+        }
+
+        // Log user activity to the network logs
+        function logNetworkActivity(action, message) {
+            const logEntry = {
+                username,
+                sessionId,
+                action,
+                message,
+                timestamp: Date.now()
+            };
+            logs.set(logEntry); // Save log entry to the network-logs node
         }
 
         // Display area for tweets
@@ -47,6 +60,9 @@
                 // Save tweet to Gun.js and distribute across peers
                 tweets.set(tweetData);
                 tweetInput.value = '';
+
+                // Log this activity
+                logNetworkActivity('Post Tweet', tweetContent);
             }
         });
 
