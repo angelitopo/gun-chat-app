@@ -14,10 +14,10 @@
     </div>
 
     <script>
-        // Initialize Gun and set up 'tweets' and 'network-logs' nodes
-        const gun = Gun(location.origin + '/gun');
+        // Initialize Gun and set up shared nodes for 'tweets' and 'network-logs'
+        const gun = Gun(['https://your-peer-server.com/gun']);  // Ensure all users connect to the same peer
         const tweets = gun.get('tweets');
-        const logs = gun.get('network-logs'); // Node for logging network activity
+        const logs = gun.get('network-logs'); // Shared node for logging network activity
 
         // Set Username and Session ID
         let username = localStorage.getItem('username') || prompt("Enter your username:");
@@ -29,7 +29,7 @@
             return Math.random() < 0.5 ? '🟢' : '🔴';
         }
 
-        // Log user activity to the network logs
+        // Log user activity to the shared network logs
         function logNetworkActivity(action, message) {
             const logEntry = {
                 username,
@@ -38,7 +38,7 @@
                 message,
                 timestamp: Date.now()
             };
-            logs.set(logEntry); // Save log entry to the network-logs node
+            logs.set(logEntry); // Save log entry to the shared network-logs node
         }
 
         // Display area for tweets
