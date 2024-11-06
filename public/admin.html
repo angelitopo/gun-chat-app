@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Network Activity Log</title>
+    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+    <link rel="stylesheet" href="admin-style.css">
+</head>
+<body>
+    <h1>Network Activity Log</h1>
+    <div id="activity-log"></div>
+
+    <script>
+        // Initialize Gun and set up a network logs node
+        const gun = Gun(location.origin + '/gun');
+        const logs = gun.get('network-logs');
+
+        // Display area for activity logs
+        const activityLogDiv = document.getElementById('activity-log');
+
+        // Listen for new log entries
+        logs.map().on((logEntry, id) => {
+            if (logEntry) {
+                const logLine = document.createElement('p');
+                logLine.textContent = `[${new Date(logEntry.timestamp).toLocaleString()}] ${logEntry.username} (${logEntry.sessionId}): ${logEntry.action} - ${logEntry.message}`;
+                activityLogDiv.appendChild(logLine);
+                activityLogDiv.scrollTop = activityLogDiv.scrollHeight; // Auto-scroll to latest log
+            }
+        });
+    </script>
+</body>
+</html>
