@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -8,63 +8,55 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="messages"></div>
+    <div id="tweets"></div>
     <div id="input-container">
-        <input id="input" placeholder="Type your tweet..." autofocus />
+        <input id="tweet-input" placeholder="Type your tweet..." autofocus />
     </div>
 
     <script>
-        // Initialize Gun with a peer for decentralization
-        const gun = Gun({
-            peers: ['https://your-p2p-server.com/gun']
-        });
-
-        // Reference to the "tweets" data node
+        // Initialize Gun and set up a 'tweets' node
+        const gun = Gun(location.origin + '/gun');
         const tweets = gun.get('tweets');
 
-        // User setup: set username and session ID
+        // Set Username and Session ID
         let username = localStorage.getItem('username') || prompt("Enter your username:");
         localStorage.setItem('username', username);
         const sessionId = Math.random().toString(36).substr(2, 9);
 
-        // Helper function to get online status (just random for now)
+        // Helper function to generate online status indicators
         function getStatusIndicator() {
             return Math.random() < 0.5 ? '🟢' : '🔴';
         }
 
-        // DOM elements
-        const messagesDiv = document.getElementById('messages');
-        const inputField = document.getElementById('input');
+        // Display area for tweets
+        const tweetsDiv = document.getElementById('tweets');
+        const tweetInput = document.getElementById('tweet-input');
 
-        // Function to post a tweet
-        function postTweet(content) {
-            const tweet = {
-                username,
-                sessionId,
-                content,
-                status: getStatusIndicator(),
-                timestamp: Date.now()
-            };
-            // Store the tweet in the Gun.js network
-            tweets.set(tweet);
-        }
-
-        // Event listener for posting a tweet when Enter key is pressed
-        inputField.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter' && inputField.value.trim() !== '') {
-                const content = inputField.value;
-                postTweet(content);
-                inputField.value = '';
+        // Event listener for posting tweets
+        tweetInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter' && tweetInput.value.trim() !== '') {
+                const tweetContent = tweetInput.value;
+                const tweetData = {
+                    username,
+                    sessionId,
+                    content: tweetContent,
+                    status: getStatusIndicator(),
+                    timestamp: Date.now()
+                };
+                
+                // Save tweet to Gun.js and distribute across peers
+                tweets.set(tweetData);
+                tweetInput.value = '';
             }
         });
 
-        // Listen for new tweets and display them in real-time
-        tweets.map().on((tweet, id) => {
-            if (tweet && tweet.content) {
-                const messageLine = document.createElement('p');
-                messageLine.textContent = `@${tweet.username} (${tweet.status}): ${tweet.content}`;
-                messagesDiv.appendChild(messageLine);
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        // Listen for new tweets and display them
+        tweets.map().on((data, id) => {
+            if (data && data.content) {
+                const tweetLine = document.createElement('p');
+                tweetLine.textContent = `@${data.username} (${data.status}): ${data.content}`;
+                tweetsDiv.appendChild(tweetLine);
+                tweetsDiv.scrollTop = tweetsDiv.scrollHeight;
             }
         });
     </script>
