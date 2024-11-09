@@ -9,6 +9,7 @@
 </head>
 <body>
     <h1>Network Activity Log</h1>
+    <div id="data-usage">Total Data Stored: 0 KB</div>
     <div id="activity-log"></div>
 
     <script>
@@ -16,16 +17,34 @@
         const gun = Gun(location.origin + '/gun');
         const logs = gun.get('network-logs');
 
-        // Display area for activity logs
+        // Display area for activity logs and data usage
         const activityLogDiv = document.getElementById('activity-log');
+        const dataUsageDiv = document.getElementById('data-usage');
 
-        // Listen for new log entries
+        let totalDataSize = 0;
+
+        // Helper function to calculate the approximate size of an object in bytes
+        function calculateDataSize(obj) {
+            const str = JSON.stringify(obj);
+            // Each character is roughly 1 byte
+            return new Blob([str]).size;
+        }
+
+        // Listen for new log entries and calculate their data size
         logs.map().on((logEntry, id) => {
             if (logEntry) {
+                // Display the log entry
                 const logLine = document.createElement('p');
                 logLine.textContent = `[${new Date(logEntry.timestamp).toLocaleString()}] ${logEntry.username} (${logEntry.sessionId}): ${logEntry.action} - ${logEntry.message}`;
                 activityLogDiv.appendChild(logLine);
                 activityLogDiv.scrollTop = activityLogDiv.scrollHeight; // Auto-scroll to latest log
+
+                // Calculate the data size of this log entry and update total data size
+                const entrySize = calculateDataSize(logEntry);
+                totalDataSize += entrySize;
+                
+                // Update data usage display in KB
+                dataUsageDiv.textContent = `Total Data Stored: ${(totalDataSize / 1024).toFixed(2)} KB`;
             }
         });
     </script>
