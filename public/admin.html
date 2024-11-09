@@ -9,7 +9,8 @@
 </head>
 <body>
     <h1>Network Activity Log</h1>
-    <div id="data-usage">Total Data Stored: 0 KB</div>
+    <div id="total-data-usage">Total Data Stored: 0 KB</div>
+    <div id="user-data-usage">Data Per User:</div>
     <div id="activity-log"></div>
 
     <script>
@@ -17,17 +18,28 @@
         const gun = Gun(location.origin + '/gun');
         const logs = gun.get('network-logs');
 
-        // Display area for activity logs and data usage
+        // Display areas for activity logs, total data usage, and data usage per user
         const activityLogDiv = document.getElementById('activity-log');
-        const dataUsageDiv = document.getElementById('data-usage');
+        const totalDataUsageDiv = document.getElementById('total-data-usage');
+        const userDataUsageDiv = document.getElementById('user-data-usage');
 
         let totalDataSize = 0;
+        const userDataSize = {}; // Track data size per user
 
         // Helper function to calculate the approximate size of an object in bytes
         function calculateDataSize(obj) {
             const str = JSON.stringify(obj);
             // Each character is roughly 1 byte
             return new Blob([str]).size;
+        }
+
+        // Function to update user data display
+        function updateUserDataUsage() {
+            userDataUsageDiv.innerHTML = 'Data Per User: <br>';
+            for (const user in userDataSize) {
+                const userSizeKB = (userDataSize[user] / 1024).toFixed(2);
+                userDataUsageDiv.innerHTML += `${user}: ${userSizeKB} KB<br>`;
+            }
         }
 
         // Listen for new log entries and calculate their data size
@@ -39,12 +51,21 @@
                 activityLogDiv.appendChild(logLine);
                 activityLogDiv.scrollTop = activityLogDiv.scrollHeight; // Auto-scroll to latest log
 
-                // Calculate the data size of this log entry and update total data size
+                // Calculate the data size of this log entry
                 const entrySize = calculateDataSize(logEntry);
                 totalDataSize += entrySize;
-                
-                // Update data usage display in KB
-                dataUsageDiv.textContent = `Total Data Stored: ${(totalDataSize / 1024).toFixed(2)} KB`;
+
+                // Update total data usage display
+                totalDataUsageDiv.textContent = `Total Data Stored: ${(totalDataSize / 1024).toFixed(2)} KB`;
+
+                // Track data size per user
+                if (!userDataSize[logEntry.username]) {
+                    userDataSize[logEntry.username] = 0;
+                }
+                userDataSize[logEntry.username] += entrySize;
+
+                // Update data usage per user display
+                updateUserDataUsage();
             }
         });
     </script>
